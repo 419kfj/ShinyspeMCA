@@ -1,0 +1,27 @@
+Package: ShinyspeMCA
+Type: Package
+Title: What the Package Does (Title Case)
+Version: 3.0.1
+Authors@R: c(
+    person(
+      "kazuo", "fujimoto",
+      email = "kazuo.fujimoto2007@gmail.com",
+      role = c("aut", "cre")
+    )
+  )
+Description: More about what it does (maybe more than one line).
+    Continuation lines should be indented.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    dplyr,
+    DT,
+    GDAtools,
+    ggplot2,
+    ggrepel,
+    listviewer,
+    plotly,
+    rlang,
+    shiny
+RoxygenNote: 7.3.3
