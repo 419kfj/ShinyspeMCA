@@ -22,10 +22,21 @@ if (requireNamespace("showtext", quietly = TRUE)) {
 #' @param ... shinyAppへ渡すその他の引数
 #' @export
 run_app <- function(df = NULL, ...) {
+  # app_version <- tryCatch({
+  #   desc <- read.dcf(system.file("DESCRIPTION", package = "ShinyspeMCA"))
+  #   desc[1, "Version"]
+  # }, error = function(e) "0.95")
+
+  # 変更後（インストール済みパッケージの DESCRIPTION を安全に取得）
   app_version <- tryCatch({
-    desc <- read.dcf(system.file("DESCRIPTION", package = "ShinyspeMCA"))
-    desc[1, "Version"]
-  }, error = function(e) "0.95")
+    desc_path <- system.file("DESCRIPTION", package = "ShinyspeMCA")
+    if (nchar(desc_path) > 0 && file.exists(desc_path)) {
+      read.dcf(desc_path)[1, "Version"]
+    } else {
+      "3.0.1" # フォールバック値
+    }
+  }, error = function(e) "3.0.1")
+
 
   ui <- app_ui(app_version = app_version)
 
