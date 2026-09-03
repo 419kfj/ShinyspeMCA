@@ -19,6 +19,12 @@ run_app <- function(...) {
     desc[1, "Version"]
   }, error = function(e) "0.95")
 
+  # パッケージ内の inst/app/www を /www として登録
+  www_path <- system.file("app/www", package = "ShinyspeMCA")
+  if (www_path != "") {
+    shiny::addResourcePath("www", www_path)
+  }
+
   shinyApp(
     ui = app_ui(app_version = app_version),
     server = app_server,
