@@ -28,7 +28,8 @@ app_ui <- function(app_version = "0.95") {
         sidebarPanel(
           wellPanel(
             h4("1. データ読み込み"),
-            fileInput("file", "rdaファイルをアップロード", accept = ".rda"),
+#            fileInput("file", "rdaファイルをアップロード", accept = ".rda"),
+            uiOutput("file_input_ui"),
             actionButton("load_rda", "rda読み込み", class = "btn-primary", width = "100%")
           ),
           hr(),

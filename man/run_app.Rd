@@ -4,10 +4,12 @@
 \alias{run_app}
 \title{アプリ起動関数}
 \usage{
-run_app(...)
+run_app(df = NULL, ...)
 }
 \arguments{
-\item{...}{shinyAppへ渡す引数}
+\item{df}{オプション。解析対象のデータフレーム（未指定の場合はファイルアップロードUIを使用）}
+
+\item{...}{shinyAppへ渡すその他の引数}
 }
 \description{
 アプリ起動関数

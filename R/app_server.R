@@ -1,25 +1,54 @@
-#' アプリ Server 定義
-#' @param input Shiny input
-#' @param output Shiny output
-#' @param session Shiny session
-#' @export
-app_server <- function(input, output, session) {
+#' @import shiny
+app_server <- function(input, output, session, external_df = NULL) {
 
-  ## rda 読み込み：load ボタンで eventReactive ----
-  dataset <- eventReactive(input$load_rda, {
-    req(input$file)
-    e <- new.env()
-    obj_names <- load(input$file$datapath, envir = e)
-    objs <- mget(obj_names, envir = e)
-    message("ロードされたオブジェクト: ", paste(names(objs), collapse = ", "))
-    objs
+  # --- 1. サイドバーの UI 切り替え ---
+  output$file_input_ui <- renderUI({
+    if (!is.null(external_df)) {
+      # 引数 df が指定されている場合のメッセージ表示
+      tags$div(
+        class = "alert alert-info",
+        style = "padding: 10px; background-color: #d9edf7; border-color: #bce8f1; color: #31708f; border-radius: 4px;",
+        h5(icon("info-circle"), " 引数データセットを自動読み込み中", style = "margin-top: 0;"),
+        p(sprintf("サイズ: %d 行 × %d 列", nrow(external_df), ncol(external_df)), style = "margin-bottom: 0;")
+      )
+    } else {
+      # 引数が無い場合は通常のファイル入力UIを表示
+      fileInput("file1", "データファイル (.rda / .RData / .csv) を選択",
+                accept = c(".rda", ".RData", ".csv"))
+    }
   })
 
-  # (.rda の最初のオブジェクトを) df として使う ----
-  df_reactive <- reactive({
-    req(dataset())
-    dataset()[[1]]
+  # --- 2. データフレームの判定と取得 ---
+#  datasetInput <- reactive({
+    df_reactive <- reactive({
+    # A) 引数 df で直接渡されている場合
+    if (!is.null(external_df)) {
+      return(as.data.frame(external_df))
+    }
+
+    # B) UI経由でファイルがアップロードされた場合
+    req(input$file1)
+    ext <- tools::file_ext(input$file1$name)
+
+    if (ext %in% c("rda", "RData")) {
+      env <- new.env()
+      load(input$file1$datapath, envir = env)
+      obj_names <- ls(env)
+      return(env[[obj_names[1]]])
+    } else if (ext == "csv") {
+      return(read.csv(input$file1$datapath, stringsAsFactors = TRUE))
+    } else {
+      validate("サポートされていないファイル形式です (.rda, .RData, .csv)")
+    }
   })
+
+  # --- 3. データプレビュー表示例 ---
+  output$data_preview <- renderTable({
+    df <- datasetInput()
+    head(df)
+  })
+
+  # ※ 以降の speMCA 分析・グラフ描画処理等は datasetInput() を参照して実行してください。
 
   # Active変数の選択 ----
   output$variable_selectors <- renderUI({
