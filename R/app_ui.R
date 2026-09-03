@@ -12,14 +12,14 @@ app_ui <- function(app_version = "0.95") {
       h3("Powered by & Supported by"),
       div(
         style = "display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;",
-        img(src = "GDAtools.png", width = "100px"),
-        img(src = "shiny.webp", width = "100px"),
-        img(src = "ggplot2.png", width = "100px"),
-        img(src = "dplyr.png", width = "100px"),
+        img(src = "ShinyspeMCA/GDAtools.png", width = "100px"),
+        img(src = "ShinyspeMCA/shiny.webp", width = "100px"),
+        img(src = "ShinyspeMCA/ggplot2.png", width = "100px"),
+        img(src = "ShinyspeMCA/dplyr.png", width = "100px"),
         div(style = "font-weight: bold; font-size: 24px; color: #4285F4; font-family: sans-serif;", "Gemini AI")
       ),
       h3("Developed by/with"),
-      img(src = "rstudio-logo-png_seeklogo-349849.png", width = "100px")
+      img(src = "ShinyspeMCA/rstudio-logo-png_seeklogo-349849.png", width = "100px")
     ),
 
     tabPanel(
