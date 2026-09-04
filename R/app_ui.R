@@ -9,7 +9,11 @@ app_ui <- function(app_version = "0.95") {
       h2("多重対応分析MCA分析サポート", paste("Version:", app_version)),
       # パッケージ名が ShinyspeMCA の場合
 #      includeMarkdown(system.file("www/overview.md", package = "ShinyspeMCA")),
-      HTML(markdown::mark_html(system.file("www/overview.md", package = "ShinyspeMCA"))),
+#      HTML(markdown::mark_html(system.file("www/overview.md", package = "ShinyspeMCA"))),
+       HTML(markdown::mark_html(
+         text = paste(readLines(system.file("www/overview.md", package = "ShinyspeMCA"),
+                                encoding = "UTF-8"), collapse = "\n")
+         )),
       hr(),
       h3("Powered by & Supported by"),
       div(
