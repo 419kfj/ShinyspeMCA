@@ -19,30 +19,24 @@ if (requireNamespace("showtext", quietly = TRUE)) {
 
 #' アプリ起動関数
 #' @param df オプション。解析対象のデータフレーム（未指定の場合はファイルアップロードUIを使用）
+#' @param res オプション。計算済みの speMCA 結果オブジェクト（GDAtools::speMCA の出力）
 #' @param ... shinyAppへ渡すその他の引数
 #' @export
-run_app <- function(df = NULL, ...) {
-  # app_version <- tryCatch({
-  #   desc <- read.dcf(system.file("DESCRIPTION", package = "ShinyspeMCA"))
-  #   desc[1, "Version"]
-  # }, error = function(e) "0.95")
-
-  # 変更後（インストール済みパッケージの DESCRIPTION を安全に取得）
+run_app <- function(df = NULL, res = NULL, ...) {
   app_version <- tryCatch({
     desc_path <- system.file("DESCRIPTION", package = "ShinyspeMCA")
     if (nchar(desc_path) > 0 && file.exists(desc_path)) {
       read.dcf(desc_path)[1, "Version"]
     } else {
-      "3.0.1" # フォールバック値
+      "3.0.1"
     }
   }, error = function(e) "3.0.1")
 
-
   ui <- app_ui(app_version = app_version)
 
-  # 引数 df を server 関数側で参照できるようにセット
+  # 引数 df および res を server 関数側へ渡す
   server <- function(input, output, session) {
-    app_server(input, output, session, external_df = df)
+    app_server(input, output, session, external_df = df, external_res = res)
   }
 
   shinyApp(

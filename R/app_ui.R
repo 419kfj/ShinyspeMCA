@@ -26,24 +26,7 @@ app_ui <- function(app_version = "0.95") {
       "File読み込み-MCA実行",
       sidebarLayout(
         sidebarPanel(
-          wellPanel(
-            h4("1. データ読み込み"),
-#            fileInput("file", "rdaファイルをアップロード", accept = ".rda"),
-            uiOutput("file_input_ui"),
-            actionButton("load_rda", "rda読み込み", class = "btn-primary", width = "100%")
-          ),
-          hr(),
-          wellPanel(
-            h4("2. Active変数の選択"),
-            uiOutput("variable_selectors")
-          ),
-          hr(),
-          wellPanel(
-            h4("3. Junkカテゴリの設定と実行"),
-            uiOutput("junk_selector")
-          ),
-          hr(),
-          downloadButton("download_mca", "speMCA結果(explor形式)を保存", class = "btn-info", style = "width:100%")
+          uiOutput("file_input_ui")
         ),
         mainPanel(
           tabsetPanel(

@@ -1,47 +1,111 @@
 #' @import shiny
-app_server <- function(input, output, session, external_df = NULL) {
+app_server <- function(input, output, session, external_df = NULL, external_res = NULL) {
 
   # --- 1. サイドバーの UI 切り替え ---
+  # --- 1. サイドバーの UI 切り替え ---
   output$file_input_ui <- renderUI({
-    if (!is.null(external_df)) {
-      # 引数 df が指定されている場合のメッセージ表示
-      tags$div(
-        class = "alert alert-info",
-        style = "padding: 10px; background-color: #d9edf7; border-color: #bce8f1; color: #31708f; border-radius: 4px;",
-        h5(icon("info-circle"), " 引数データセットを自動読み込み中", style = "margin-top: 0;"),
-        p(sprintf("サイズ: %d 行 × %d 列", nrow(external_df), ncol(external_df)), style = "margin-bottom: 0;")
+    if (!is.null(external_res) || (!is.null(input$upload_mode) && input$upload_mode == "mode_res")) {
+      # 【第二段階モード】計算済み結果 (res) がある場合
+      tagList(
+        if (!is.null(external_res)) {
+          tags$div(
+            class = "alert alert-success",
+            style = "padding: 10px; background-color: #dff0d8; border-color: #d6e9c6; color: #3c763d; border-radius: 4px;",
+            h5(icon("check-circle"), " 計算済みspeMCA結果を自動読み込み中", style = "margin-top: 0; font-weight: bold;"),
+            p("speMCA実行ステップはスキップされ、直接各種分析を利用できます。", style = "margin-bottom: 0;")
+          )
+        } else {
+          tagList(
+            radioButtons("upload_mode", "開始モード:",
+                         choices = c("新規データから実行" = "mode_new",
+                                     "計算済み結果(.rds)を読み込み" = "mode_res"),
+                         selected = "mode_res"),
+            hr(style = "margin: 10px 0;"),
+            fileInput("file_df_for_res", "1. 元データファイル (.rda / .csv)",
+                      accept = c(".rda", ".RData", ".csv")),
+            fileInput("file_res", "2. speMCA結果ファイル (.rds)",
+                      accept = c(".rds"))
+          )
+        },
+        tags$div(
+          class = "alert alert-info",
+          style = "margin-top: 15px;",
+          p(icon("info-circle"), " このモードでは第一段階（Active変数選択・Junk指定）はスキップされています。上のタブから「変数空間分析」や「個体空間分析」を直接ご利用ください。")
+        )
       )
     } else {
-      # 引数が無い場合は通常のファイル入力UIを表示
-      fileInput("file1", "データファイル (.rda / .RData / .csv) を選択",
-                accept = c(".rda", ".RData", ".csv"))
+      # 【第一段階モード】新規データから実行する場合（既存パネルを表示）
+      tagList(
+        if (is.null(external_df)) {
+          tagList(
+            radioButtons("upload_mode", "開始モード:",
+                         choices = c("新規データから実行" = "mode_new",
+                                     "計算済み結果(.rds)を読み込み" = "mode_res"),
+                         selected = "mode_new"),
+            hr(style = "margin: 10px 0;"),
+            fileInput("file1", "データファイル (.rda / .RData / .csv) を選択",
+                      accept = c(".rda", ".RData", ".csv"))
+          )
+        } else {
+          tags$div(
+            class = "alert alert-info",
+            style = "padding: 10px; background-color: #d9edf7; border-color: #bce8f1; color: #31708f; border-radius: 4px;",
+            h5(icon("info-circle"), " 引数データセットを自動読み込み中", style = "margin-top: 0;"),
+            p(sprintf("サイズ: %d 行 × %d 列", nrow(external_df), ncol(external_df)), style = "margin-bottom: 0;")
+          )
+        },
+        hr(),
+        wellPanel(
+          h4("2. Active変数の選択"),
+          uiOutput("variable_selectors")
+        ),
+        hr(),
+        wellPanel(
+          h4("3. Junkカテゴリの設定と実行"),
+          uiOutput("junk_selector")
+        ),
+        hr(),
+        downloadButton("download_mca", "speMCA結果(explor形式)を保存", class = "btn-info", style = "width:100%")
+      )
     }
   })
 
   # --- 2. データフレームの判定と取得 ---
-#  datasetInput <- reactive({
-    df_reactive <- reactive({
-    # A) 引数 df で直接渡されている場合
+  # --- 2. データフレーム (df_reactive) の取得 ---
+  df_reactive <- reactive({
     if (!is.null(external_df)) {
       return(as.data.frame(external_df))
     }
 
-    # B) UI経由でファイルがアップロードされた場合
-    req(input$file1)
-    ext <- tools::file_ext(input$file1$name)
-
-    if (ext %in% c("rda", "RData")) {
-      env <- new.env()
-      load(input$file1$datapath, envir = env)
-      obj_names <- ls(env)
-      return(env[[obj_names[1]]])
-    } else if (ext == "csv") {
-      return(read.csv(input$file1$datapath, stringsAsFactors = TRUE))
+    upload_mode <- input$upload_mode
+    if (is.null(upload_mode) || upload_mode == "mode_new") {
+      file_target <- input$file1
     } else {
-      validate("サポートされていないファイル形式です (.rda, .RData, .csv)")
+      file_target <- input$file_df_for_res
     }
-  })
 
+    req(file_target)
+    req(file_target$datapath)
+
+    ext <- tools::file_ext(file_target$name)
+
+    tryCatch({
+      if (ext %in% c("rda", "RData")) {
+        env <- new.env()
+        load(file_target$datapath, envir = env)
+        obj_names <- ls(env)
+        res_df <- env[[obj_names[1]]]
+        return(as.data.frame(res_df))
+      } else if (ext == "csv") {
+        return(read.csv(file_target$datapath, stringsAsFactors = TRUE))
+      } else {
+        validate("サポートされていないファイル形式です (.rda, .RData, .csv)")
+      }
+    }, error = function(e) {
+      showNotification(paste0("ファイル読み込みエラー: ", e$message), type = "error")
+      return(NULL)
+    })
+  })
   # --- 3. データプレビュー表示例 ---
   output$data_preview <- renderTable({
     df <- datasetInput()
@@ -149,14 +213,29 @@ app_server <- function(input, output, session, external_df = NULL) {
   })
 
   # speMCA 実行 ----
-  mca_result <- eventReactive(input$run_mca, {
-    req(df_reactive())
-    req(input$variables)
+  # --- speMCA 結果 (mca_result) の取得 / 実行 ---
+  mca_result <- reactive({
+    if (!is.null(external_res)) {
+      return(external_res)
+    }
+
+    if (is.null(external_df) && !is.null(input$upload_mode) && input$upload_mode == "mode_res") {
+      req(input$file_res)
+      ext <- tools::file_ext(input$file_res$name)
+      if (ext == "rds") {
+        return(readRDS(input$file_res$datapath))
+      }
+    }
+
+    req(input$run_mca)
+    df <- df_reactive()
+    req(df, input$variables)
+
     if (length(input$variables) < 2) {
       showNotification("Active変数は少なくとも2つ選んでください。", type = "warning")
       return(NULL)
     }
-    df <- df_reactive()
+
     df_sub <- df[, input$variables, drop = FALSE]
     excl_indices <- NULL
     if (!is.null(input$excluded_cats) && length(input$excluded_cats) > 0) {
@@ -164,6 +243,7 @@ app_server <- function(input, output, session, external_df = NULL) {
       excl_indices <- match(input$excluded_cats, jc)
       excl_indices <- excl_indices[!is.na(excl_indices)]
     }
+
     tryCatch({
       GDAtools::speMCA(df_sub, excl = excl_indices)
     }, error = function(e) {
@@ -171,7 +251,6 @@ app_server <- function(input, output, session, external_df = NULL) {
       NULL
     })
   })
-
   # speMCAのresultを出力 ----
   output$mca_result_list <- renderPrint({
     req(mca_result())

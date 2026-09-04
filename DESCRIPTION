@@ -1,7 +1,7 @@
 Package: ShinyspeMCA
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 3.0.1
+Title: speMCA helper
+Version: 3.0.2
 Authors@R: c(
     person(
       "kazuo", "fujimoto",
