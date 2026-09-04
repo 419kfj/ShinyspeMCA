@@ -7,7 +7,7 @@ app_ui <- function(app_version = "0.95") {
     tabPanel(
       "概要",
       h2("多重対応分析MCA分析サポート", paste("Version:", app_version)),
-      p("speMCAのリザルトを統合オブジェクトとしてダウンロードし、explorパッケージ等で別途分析することが可能です。"),
+      includeMarkdown("www/overview.md"),
       hr(),
       h3("Powered by & Supported by"),
       div(
