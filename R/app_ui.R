@@ -10,11 +10,12 @@ app_ui <- function(app_version = "0.95") {
       # パッケージ名が ShinyspeMCA の場合
 #      includeMarkdown(system.file("www/overview.md", package = "ShinyspeMCA")),
 #      HTML(markdown::mark_html(system.file("www/overview.md", package = "ShinyspeMCA"))),
-       HTML(markdown::mark_html(
-         text = paste(readLines(system.file("www/overview.md", package = "ShinyspeMCA"),
-                                encoding = "UTF-8"), collapse = "\n")
-         )),
-      hr(),
+       # HTML(markdown::mark_html(
+       #   text = paste(readLines(system.file("www/overview.md", package = "ShinyspeMCA"),
+       #                          encoding = "UTF-8"), collapse = "\n")
+       #   )),
+# サーバーからUIを受け取るための場所を用意
+      uiOutput("overview_md_ui"),
       h3("Powered by & Supported by"),
       div(
         style = "display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;",

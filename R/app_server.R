@@ -1,7 +1,19 @@
 #' @import shiny
 app_server <- function(input, output, session, external_df = NULL, external_res = NULL) {
 
-  # --- 1. サイドバーの UI 切り替え ---
+  #　overview.mdの表示
+  output$overview_md_ui <- renderUI({
+    md_path <- system.file("www/overview.md", package = "ShinyspeMCA")
+
+    if (md_path != "" && file.exists(md_path)) {
+      # サーバー側で includeMarkdown を実行
+      includeMarkdown(md_path)
+    } else {
+      p(style = "color: red;", "概要ファイル (overview.md) が見つかりませんでした。")
+    }
+  })
+
+
   # --- 1. サイドバーの UI 切り替え ---
   output$file_input_ui <- renderUI({
     if (!is.null(external_res) || (!is.null(input$upload_mode) && input$upload_mode == "mode_res")) {
