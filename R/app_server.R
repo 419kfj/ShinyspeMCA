@@ -5,15 +5,32 @@ app_server <- function(input, output, session, external_df = NULL, external_res 
   output$overview_md_ui <- renderUI({
     md_path <- system.file("www/overview.md", package = "ShinyspeMCA")
 
+    # ログ出力（Dockerのログに書き出されます）
+    message("DEBUG [ShinyServer]: md_path is '", md_path, "'")
+    message("DEBUG [ShinyServer]: file.exists = ", file.exists(md_path))
+
     if (md_path != "" && file.exists(md_path)) {
-      # サーバー側で includeMarkdown を実行
-      includeMarkdown(md_path)
-    } else {
-      p(style = "color: red;", "概要ファイル (overview.md) が見つかりませんでした。")
+      # tryCatch で読み込みエラーを拾う
+      md_text <- tryCatch({
+        paste(readLines(md_path, encoding = "UTF-8"), collapse = "\n")
+      }, error = function(e) {
+        message("DEBUG [ShinyServer] Read Error: ", e$message)
+        return(NULL)
+      })
+
+      if (!is.null(md_text)) {
+        return(HTML(markdown::mark_html(text = md_text)))
+      }
     }
+
+    # 失敗した場合は画面に赤字で通知
+    div(
+      style = "color: red; font-weight: bold; padding: 10px; border: 1px solid red;",
+      paste("ERROR: overview.md の読み込みに失敗しました。"), br(),
+      paste("取得パス:", md_path), br(),
+      paste("存在チェック:", file.exists(md_path))
+    )
   })
-
-
   # --- 1. サイドバーの UI 切り替え ---
   output$file_input_ui <- renderUI({
     if (!is.null(external_res) || (!is.null(input$upload_mode) && input$upload_mode == "mode_res")) {
